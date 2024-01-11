@@ -12,8 +12,9 @@ This Arduino project utilizes the FastLED library to create various animated eff
 
 ## Requirements
 - Arduino board (e.g., Arduino Uno, Arduino Nano)
+- Power Supply suitable for the selected LED strip and its length
 - Push Button
-- NeoPixel LED strip
+- NeoPixel LED strip (WS2812B tested)
 - FastLED library
 
 ## Installation
@@ -35,4 +36,3 @@ This Arduino project utilizes the FastLED library to create various animated eff
 
 ## Contributing
 Contributions are welcome! Feel free to open issues or submit pull requests to enhance the project.
-
