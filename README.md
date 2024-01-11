@@ -8,7 +8,6 @@ This Arduino project utilizes the FastLED library to create various animated eff
 - [Usage](#usage)
 - [Customization](#customization)
 - [Contributing](#contributing)
-- [License](#license)
 
 ## Requirements
 - Arduino board (e.g., Arduino Uno, Arduino Nano)
