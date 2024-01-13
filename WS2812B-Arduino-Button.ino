@@ -54,7 +54,7 @@ boolean checkButton(){
     buttonState = digitalRead(buttonPin);
     if (buttonState == HIGH) {
     digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
-    if(mode<3) mode++;
+    if(mode<5) mode++;
     else mode=0;
     delay(500);
     return true;
@@ -68,7 +68,7 @@ void fadeall() {
 }
 
 void fullFade(){
-  for (int i=0; i < NUM_LEDS; i++){
+  for (int i=0; i < 100; i++){
     fadeall();
     delay(1);
     FastLED.show();
@@ -94,12 +94,9 @@ void fullBright(){
 void loop() {
   switch (mode) {
     case 0:
-      // ThreeSegment();
-
+      waves(150, 25);
       // oceanEffect();
-
-      waves(150, 20);
-
+      
       // cometEffect(strip.Color(0, 0, 255), 10, 50);
       break;
     case 1:
@@ -109,10 +106,17 @@ void loop() {
       // fullFade();-
       break;
     case 2:
-      cylonAnimation(10, 10);
+      simpleFade();
       break;
     case 3:
+      cylonAnimation(10, 10);
+      
+      break;
+    case 4:
       fireEffect();
+      break;
+    case 5:
+      ThreeSegment();
       break;
   }
 }
@@ -140,10 +144,68 @@ void cylonAnimation(uint8_t speed, uint8_t delayTime) {
   delay(delayTime);
 }
 
+void simpleFade() {
+  int counter = 0;
+
+  while (true) {
+    if(checkButton()) return;
+
+    int color = random() % 255;
+
+    if (counter == 0) {
+      for (int i = 0; i < NUM_LEDS; i++) {
+        if(checkButton()) return;
+        leds[i] = CHSV(color, 255, 255);
+        FastLED.show();
+        delay(30);
+      }
+    }
+
+    if (counter < 255) {
+      counter++;
+    } else {
+      counter = 0;
+    }
+    delay(10);
+  }
+}
+
 void ThreeSegment(){
-  // góra 203-348
-  // środek 111-202
-  // dół 0-110
+  while(true){
+    int color=random()%255;
+    
+    // dół 0-110
+    for(int i=0, j=109; i<110; i++, j--){
+      leds[i] = CHSV(color, 255, 255);
+      leds[j] = CHSV(color, 255, 255); // Set LED color for variable j
+      FastLED.show(); 
+      fadeall();
+      if (checkButton()) return;
+    }
+    
+    // delay(amount);
+    color=random()%255;
+    
+    // środek 111-202
+    for(int i=111, j=201; i<202; i++, j--){
+      leds[i] = CHSV(color, 255, 255);
+      leds[j] = CHSV(color, 255, 255); // Set LED color for variable j
+      FastLED.show(); 
+      fadeall();
+      if (checkButton()) return;
+    }
+    
+    color=random()%255;
+    
+    // góra 203-348
+    for(int i=203, j=348; i<=348; i++, j--){
+      leds[i] = CHSV(color, 255, 255);
+      leds[j] = CHSV(color, 255, 255); // Set LED color for variable j
+      FastLED.show(); 
+      fadeall();
+      if (checkButton()) return;
+    }
+}
 }
 
 void waves(int color, int amount) {
