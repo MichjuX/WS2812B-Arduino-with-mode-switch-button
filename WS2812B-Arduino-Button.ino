@@ -24,7 +24,8 @@ FASTLED_USING_NAMESPACE
 #define FRAMES_PER_SECOND 60
 
 // constants won't change. They're used here to set pin numbers:
-const int buttonPin = 2;  // the number of the pushbutton pin
+const int buttonPin2 = 2;  // the number of the pushbutton pin
+const int buttonPin3 = 3;  // the number of the pushbutton pin
 int buttonState = 0;
 int mode=0;
 
@@ -44,21 +45,26 @@ FastLED.setBrightness( BRIGHTNESS );
   // initialize the LED pin as an output:
   pinMode(LED_BUILTIN, OUTPUT);
   // initialize the pushbutton pin as an input:
-  pinMode(buttonPin, INPUT);
+  pinMode(buttonPin2, INPUT);
   // END of button setup
 }
 
 
 // loop() function -- runs repeatedly as long as board is on ---------------
-boolean checkButton(){
-    buttonState = digitalRead(buttonPin);
+boolean checkButton1(){
+    buttonState = digitalRead(buttonPin2);
     if (buttonState == HIGH) {
-    digitalWrite(LED_BUILTIN, HIGH);  // turn the LED on (HIGH is the voltage level)
     if(mode<5) mode++;
     else mode=0;
     delay(500);
     return true;
     }
+    else return false;
+}
+
+boolean checkButton2(){
+    buttonState = digitalRead(buttonPin3);
+    if (buttonState == HIGH) return true;
     else return false;
 }
 void fadeall() {
@@ -101,7 +107,7 @@ void loop() {
       break;
     case 1:
       rainbow_wave(5, 1);
-      if(checkButton()) break;
+      if(checkButton1()) break;
       FastLED.show();
       // fullFade();-
       break;
@@ -125,7 +131,7 @@ void cylonAnimation(uint8_t speed, uint8_t delayTime) {
   static uint8_t hue = 0;
 
   for (int i = 0, j = (NUM_LEDS)-1; i < NUM_LEDS, j >= 0; i++, j--) {
-    if(checkButton()) return;
+    if(checkButton1()) return;
     leds[i] = CHSV(hue++, 255, 255);
     leds[j] = CHSV(hue++, 255, 255);
     FastLED.show();
@@ -134,7 +140,7 @@ void cylonAnimation(uint8_t speed, uint8_t delayTime) {
   }
 
   // for (int i = (NUM_LEDS)-1; i >= 0; i--) {
-  //   if(checkButton()) return;
+  //   if(checkButton1()) return;
   //   leds[i] = CHSV(hue++, 255, 255);
   //   FastLED.show();
   //   fadeall();
@@ -148,13 +154,13 @@ void simpleFade() {
   int counter = 0;
 
   while (true) {
-    if(checkButton()) return;
+    if(checkButton1()) return;
 
     int color = random() % 255;
 
     if (counter == 0) {
       for (int i = 0; i < NUM_LEDS; i++) {
-        if(checkButton()) return;
+        if(checkButton1()) return;
         leds[i] = CHSV(color, 255, 255);
         FastLED.show();
         delay(30);
@@ -180,7 +186,7 @@ void ThreeSegment(){
       leds[j] = CHSV(color, 255, 255); // Set LED color for variable j
       FastLED.show(); 
       fadeall();
-      if (checkButton()) return;
+      if (checkButton1()) return;
     }
     
     // delay(amount);
@@ -192,7 +198,7 @@ void ThreeSegment(){
       leds[j] = CHSV(color, 255, 255); // Set LED color for variable j
       FastLED.show(); 
       fadeall();
-      if (checkButton()) return;
+      if (checkButton1()) return;
     }
     
     color=random()%255;
@@ -203,7 +209,7 @@ void ThreeSegment(){
       leds[j] = CHSV(color, 255, 255); // Set LED color for variable j
       FastLED.show(); 
       fadeall();
-      if (checkButton()) return;
+      if (checkButton1()) return;
     }
 }
 }
@@ -228,7 +234,13 @@ void waves(int color, int amount) {
   }
   int timer=0; // timer variable needed for determining if wave should already start
     while(true){
-      if (checkButton()) return;
+      if (checkButton1()) return;
+      if(checkButton2()){ // 2nd button color change
+        if(color<=245){
+          color+=2;
+        }
+        else color=0;
+      }
       for(int i=0; i<numWaves; i++){ // loop for setting all waves
         if(timer>startTime[i]){ // checking whether wave should already start
           waveStarted[i]=true;
@@ -331,7 +343,7 @@ void Fire2012()
       heat[i] = random8(160, 255);
     }
   while(true){
-    if(checkButton()) return;
+    if(checkButton1()) return;
   // Step 1.  Cool down every cell a little
     for( int i = 0; i < NUM_LEDS; i++) {
       heat[i] = qsub8( heat[i],  random8(0, ((COOLING * 10) / NUM_LEDS) + 2));
