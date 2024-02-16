@@ -12,6 +12,7 @@
 
 #define FASTLED_ALLOW_INTERRUPTS 0
 #include <FastLED.h>
+#include <EEPROM.h>
 FASTLED_USING_NAMESPACE
 
 // Which pin on the Arduino is connected to the NeoPixels?
@@ -29,14 +30,33 @@ const int buttonPin3 = 3;  // the number of the pushbutton pin
 int buttonState = 0;
 int mode=0;
 
+
+
 //FastLed
 bool gReverseDirection = false;
 CRGB leds[NUM_LEDS];
 
 // setup() function -- runs once at startup --------------------------------
 
+// Set storage variables
+uint8_t adres[2] = {0, 2};
+int savedColor;
+
 void setup() {
-delay(3000);
+Serial.begin(9600);
+
+
+EEPROM.get(adres[0], mode);
+  if (mode < 0 || mode > 8) {
+    mode = 0; // Ustaw domyślną wartość, jeśli wczytana wartość jest nieprawidłowa
+    EEPROM.put(adres[0], mode); // Zapisz domyślną wartość do pamięci EEPROM
+  }
+EEPROM.get(adres[1], savedColor);
+  if (savedColor < 0 || savedColor > 255) {
+    savedColor = 0; // Ustaw domyślną wartość, jeśli wczytana wartość jest nieprawidłowa
+    EEPROM.put(adres[1], savedColor); // Zapisz domyślną wartość do pamięci EEPROM
+  }
+// delay(3000);
 FastLED.addLeds<CHIPSET, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
 FastLED.setBrightness( BRIGHTNESS );
   // END of Trinket-specific code.
@@ -47,6 +67,11 @@ FastLED.setBrightness( BRIGHTNESS );
   // initialize the pushbutton pin as an input:
   pinMode(buttonPin2, INPUT);
   // END of button setup
+  for(int i=0, j=NUM_LEDS-1; i<NUM_LEDS/2, j>NUM_LEDS/2; i++, j--){
+    leds[i]=CHSV(savedColor,255,255);
+    leds[j]=CHSV(savedColor,255,255);
+    FastLED.show();
+  }
 }
 
 
@@ -54,8 +79,9 @@ FastLED.setBrightness( BRIGHTNESS );
 boolean checkButton1(){
     buttonState = digitalRead(buttonPin2);
     if (buttonState == HIGH) {
-    if(mode<5) mode++;
+    if(mode<8)mode++;
     else mode=0;
+    EEPROM.put(adres[0], mode);
     delay(500);
     return true;
     }
@@ -98,32 +124,146 @@ void fullBright(){
 
 
 void loop() {
+  Serial.println(savedColor); // Debug
   switch (mode) {
     case 0:
-      waves(150, 25);
-      // oceanEffect();
-      
-      // cometEffect(strip.Color(0, 0, 255), 10, 50);
-      break;
-    case 1:
       rainbow_wave(5, 1);
       if(checkButton1()) break;
       FastLED.show();
-      // fullFade();-
+      break;
+    case 1:
+      waves(150, 40);
       break;
     case 2:
-      simpleFade();
+      buttonColor(savedColor);
       break;
     case 3:
-      cylonAnimation(10, 10);
-      
+      white();
       break;
     case 4:
-      fireEffect();
+      cylonAnimation(10, 10);
       break;
     case 5:
+      simpleFade();
+      break;
+    case 6:
+      fireEffect();
+      break;
+    case 7:
       ThreeSegment();
       break;
+    case 8:
+      partyMode();
+      break;
+  }
+}
+
+void buttonColor(int color){
+  int brightness=255;
+  while (true){
+    if (checkButton1()) return;
+    if(checkButton2()){
+      if(color<=250){
+        color+=1;
+      }
+      else color=0;
+      EEPROM.put(adres[1], color);
+    }
+    for(int i=0; i<NUM_LEDS; i++){
+      leds[i] = CHSV(color,255,255);
+    }
+    FastLED.show();
+  }
+}
+
+
+// void rnbw(int DelayDuration, int ColorWidth){
+//   while(true){
+//     if (checkButton1()) return;
+//     rainbowCycle(DelayDuration, ColorWidth);
+//   }
+// }
+
+// void rainbowCycle(int DelayDuration, int ColorWidth) {
+//   byte *c;
+//   uint16_t i, j;
+
+//   for(j = 0; j < 256; j++) {
+//     for(i = 0; i < NUM_LEDS; i++) {
+//       c = Wheel(fmod(((i * 256.0 / NUM_LEDS) + j) / ColorWidth, 1.0));
+//       leds[NUM_LEDS - 1 - i].setRGB(*c, *(c + 1), *(c + 2));
+//     }
+//     FastLED.show();
+//     delay(DelayDuration);
+//   }
+// }
+
+// byte *Wheel(double WheelPosition) {
+//   static byte c[3];
+
+//   WheelPosition = fmod(WheelPosition, 1.0);  // Ensure WheelPosition is within [0, 1)
+
+//   if (WheelPosition < 1.0 / 3.0) {
+//     c[0] = WheelPosition * 3 * 255;
+//     c[1] = 255 - WheelPosition * 3 * 255;
+//     c[2] = 0;
+//   } else if (WheelPosition < 2.0 / 3.0) {
+//     WheelPosition -= 1.0 / 3.0;
+//     c[0] = 255 - WheelPosition * 3 * 255;
+//     c[1] = 0;
+//     c[2] = WheelPosition * 3 * 255;
+//   } else {
+//     WheelPosition -= 2.0 / 3.0;
+//     c[0] = 0;
+//     c[1] = WheelPosition * 3 * 255;
+//     c[2] = 255 - WheelPosition * 3 * 255;
+//   }
+
+//   return c;
+// }
+
+
+
+void myRainbow() {
+  int numWaves = 10;
+  int counter = 0;
+  int wavePosition[numWaves];
+  int waveColor[numWaves];
+  
+  for (int i = 0; i < numWaves; i++) {
+    wavePosition[i] = NUM_LEDS / numWaves * i;
+    if(i!=0) waveColor[i] = waveColor[i-1]+10;
+    else waveColor[i]=0;
+    
+  }
+  
+  while (true) {
+    if (checkButton1()) return;
+    
+    if (counter < 5000) {
+      counter++;
+    } else {
+      counter = 0;
+    }
+    
+    for (int i = 0; i < numWaves; i++) {
+      leds[wavePosition[i]] = CHSV(waveColor[i], 255, 255);
+      
+      if (wavePosition[i] < NUM_LEDS) {
+        wavePosition[i]++;
+      } else {
+        wavePosition[i] = 0;
+      }
+
+      if (counter % 1 == 0 && waveColor[i] < 255) {
+        waveColor[i]++;
+      } else if (waveColor[i] >= 255) {
+        waveColor[i] = 0;
+      }
+    }
+
+    FastLED.show();
+    delay(1);
   }
 }
 
@@ -213,6 +353,53 @@ void ThreeSegment(){
     }
 }
 }
+
+void partyMode(){
+  int counter=0;
+  int color=0;
+  int brightness;
+  int saturation;
+  while (true){
+    if (checkButton1()) return;
+
+    if(counter<1000) counter++;
+    else counter=0;
+
+    if(counter<900){
+      for(int i=0; i<NUM_LEDS; i++){
+        leds[i] = CHSV(color,255,255);
+      }
+      color+=5;
+    }
+    if(counter>=900 && counter<1000){
+      if(counter%2==0) brightness=255;
+      else brightness=0;
+      delay(50);
+      for(int i=0; i<NUM_LEDS; i++){
+        leds[i] = CHSV(255,0,brightness);
+      }
+    }
+    brightness=255;
+    FastLED.show();
+  }
+}
+void white(){
+  int brightness=255;
+  while (true){
+    if (checkButton1()) return;
+    
+    if (checkButton2()){
+      if(brightness>=15) brightness-=15;
+      else brightness=255;
+      delay(100);
+    }
+    for(int i=0; i<NUM_LEDS; i++){
+      leds[i] = CHSV(60,130,brightness);
+    }
+    FastLED.show();
+  }
+}
+
 
 void waves(int color, int amount) {
   int numWaves = 20;  // Możesz dostosować ilość fal
